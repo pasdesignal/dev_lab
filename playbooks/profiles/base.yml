@@ -1,0 +1,87 @@
+---
+- name: "Base profile: podman1 baseline dev environment"
+  hosts: podman1
+  strategy: free
+  gather_facts: false
+  tasks:
+  - name: Configuring network
+    ansible.builtin.shell: >
+      nmcli con mod "System eth1"
+      ipv4.addresses "192.168.88.4/24"
+      ipv4.gateway " 192.168.88.1"
+      ipv4.dns "8.8.8.8"
+      ipv4.dns-search lab
+      ipv4.method manual
+
+  - name: Reloading Network
+    service:
+      name: NetworkManager
+      state: restarted
+
+  - name: Building Host File
+    copy:
+      dest: /etc/hosts
+      content: |
+        127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+        :1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+        192.168.88.4 podman1.lab workstation
+      force: true
+
+  - name: Disable VMware Tools guest time sync (chrony is the sole time authority)
+    ansible.builtin.copy:
+      dest: /etc/vmware-tools/tools.conf
+      content: |
+        [timetracker]
+        disable = TRUE
+      owner: root
+      group: root
+      mode: "0644"
+    notify: Restart vmtoolsd
+
+  - name: Always step the clock on large offsets, not just the first 3 updates
+    ansible.builtin.lineinfile:
+      path: /etc/chrony.conf
+      regexp: '^makestep '
+      line: 'makestep 1.0 -1'
+    notify: Restart chronyd
+
+  - name: Install base packages
+    ansible.builtin.dnf:
+      name: [ 'bash-completion', 'make', 'vim', 'skopeo', 'podman', 'podman-plugins', 'systemd-container']
+      state: latest
+
+  - name: Creating Welcome Message
+    file:
+      path: /etc/profile.d/welcome.sh
+      state: touch
+      mode: 0755
+
+  - name: Building Welcome Message
+    blockinfile:
+      dest: /etc/profile.d/welcome.sh
+      block: |
+         #!/bin/bash
+         #
+         echo -e '
+                   +----------------------------------+
+                   |    Welcome to vagrant dev VM     |
+                   |        Happy Development!        |
+                   +----------------------------------+
+         '"
+          You are logged into \"`hostname`\" as the \"`whoami`\" account.
+          This system is running `cat /etc/redhat-release`
+
+          For root - use \`sudo\` or \`sudo su -\`
+
+         "
+
+  handlers:
+  - name: Restart vmtoolsd
+    ansible.builtin.service:
+      name: vmtoolsd
+      state: restarted
+
+  - name: Restart chronyd
+    ansible.builtin.service:
+      name: chronyd
+      state: restarted

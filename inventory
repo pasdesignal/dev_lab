@@ -1,0 +1,2 @@
+[podman1]
+podman1.lab ansible_connection=local

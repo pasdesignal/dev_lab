@@ -1,0 +1,37 @@
+---
+- import_playbook: base.yml
+
+- name: "Terraform profile: Terraform/kubectl/Helm/AWS CLI tooling"
+  hosts: podman1
+  strategy: free
+  gather_facts: false
+  tasks:
+  - name: Building kubectl repo file
+    copy:
+      dest: /etc/yum.repos.d/kubernetes.repo
+      content: |
+        [kubernetes]
+        name=Kubernetes
+        baseurl=https://pkgs.k8s.io/core:/stable:/v1.35/rpm/
+        enabled=1
+        gpgcheck=1
+        gpgkey=https://pkgs.k8s.io/core:/stable:/v1.35/rpm/repodata/repomd.xml.key
+
+  - name: Add terraform repo
+    ansible.builtin.yum_repository:
+      name: hashicorp
+      description: Hashicorp Stable - $basearch
+      baseurl: https://rpm.releases.hashicorp.com/RHEL/$releasever/$basearch/stable
+      gpgcheck: true
+      gpgkey: https://rpm.releases.hashicorp.com/gpg
+
+  - name: Install terraform/k8s tooling
+    ansible.builtin.dnf:
+      name: [ 'terraform', 'awscli', 'kubectl', 'helm' ]
+      state: latest
+
+  - name: Add terraform bash completion
+    ansible.builtin.lineinfile:
+      path: /root/.bashrc
+      line: 'complete -C /usr/bin/terraform terraform'
+      create: true
