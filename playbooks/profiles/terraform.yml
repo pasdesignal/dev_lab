@@ -35,3 +35,10 @@
       path: /root/.bashrc
       line: 'complete -C /usr/bin/terraform terraform'
       create: true
+
+  - name: Add tf alias for terraform
+    ansible.builtin.copy:
+      dest: /etc/profile.d/terraform-alias.sh
+      content: |
+        alias tf='terraform'
+      mode: "0644"
