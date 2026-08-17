@@ -7,6 +7,7 @@ ARCH = ENV.fetch('VAGRANT_ARCH', 'arm64')
 # base image. See playbooks/profiles/ for the available profiles.
 #   base (default) - podman, skopeo, and general dev tools only
 #   terraform      - base + Terraform, kubectl, Helm, AWS CLI
+#   wireshark      - base + wireshark-cli (tshark/dumpcap; CLI-only, no GUI)
 PROFILE = ENV.fetch('VAGRANT_PROFILE', 'base')
 
 # Set VAGRANT_BOX_VERSION to pin to a different almalinux/9 box build than
