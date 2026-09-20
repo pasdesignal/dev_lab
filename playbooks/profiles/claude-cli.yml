@@ -1,0 +1,18 @@
+---
+- name: "Claude CLI profile: Claude Code CLI for coding-agent development"
+  hosts: podman1
+  strategy: free
+  gather_facts: false
+  tasks:
+  - name: Add Claude Code dnf repo
+    ansible.builtin.yum_repository:
+      name: claude-code
+      description: Claude Code
+      baseurl: https://downloads.claude.ai/claude-code/rpm/stable
+      gpgcheck: true
+      gpgkey: https://downloads.claude.ai/keys/claude-code.asc
+
+  - name: Install Claude Code CLI
+    ansible.builtin.dnf:
+      name: claude-code
+      state: latest
