@@ -1,6 +1,4 @@
 ---
-- import_playbook: base.yml
-
 - name: "Wireshark profile: CLI packet capture/analysis tooling"
   hosts: podman1
   strategy: free

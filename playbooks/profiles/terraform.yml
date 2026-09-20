@@ -1,6 +1,4 @@
 ---
-- import_playbook: base.yml
-
 - name: "Terraform profile: Terraform/kubectl/Helm/AWS CLI tooling"
   hosts: podman1
   strategy: free

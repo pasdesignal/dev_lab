@@ -1,0 +1,11 @@
+---
+- name: "Agent lab profile: Python tooling for hand-rolled LLM agent experiments"
+  hosts: podman1
+  strategy: free
+  gather_facts: false
+  tasks:
+  - name: Install Python packages for agent_lab experiments
+    ansible.builtin.pip:
+      name: [ 'anthropic', 'python-dotenv' ]
+      executable: pip3
+      state: latest
