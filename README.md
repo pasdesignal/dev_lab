@@ -77,6 +77,19 @@ The Vagrantfile pins a specific `almalinux/9` box build by default. Override it 
 VAGRANT_BOX_VERSION=9.9.20270101 vagrant up
 ```
 
+## Running a tagged version
+
+Releases are tagged directly in this repo using basic semver (`vMAJOR.MINOR.PATCH` — minor for additive changes like a new profile, patch for fixes, major only for breaking changes to how you invoke `vagrant up`). `vagrant up` always uses whatever's currently checked out, so to run a specific tagged version rather than the latest commit on `main`:
+
+```sh
+git fetch --tags
+git tag -l                  # see what's available, e.g. v1.1.0
+git checkout v1.1.0         # detached HEAD at that release
+vagrant up
+```
+
+To get back to the latest development state afterwards: `git checkout main`.
+
 ## Everyday commands
 
 | Command | What it does |
