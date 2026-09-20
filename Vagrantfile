@@ -45,8 +45,8 @@ Vagrant.configure("2") do |config|
     podman1.vm.network :private_network, ip: "192.168.88.4"
     podman1.vm.provision :shell, inline: "sudo dnf install -y epel-release; sudo dnf config-manager --set-enabled crb; sudo dnf install -y ansible"
 
-    def provision_profile(vm, name, playbook)
-      vm.provision :ansible_local, name: name do |ansible|
+    def provision_profile(vm, playbook)
+      vm.provision :ansible_local do |ansible|
         ansible.playbook = playbook
         ansible.install = false
         ansible.compatibility_mode = "2.0"
@@ -56,9 +56,9 @@ Vagrant.configure("2") do |config|
       end
     end
 
-    provision_profile(podman1.vm, "base", "/vagrant/playbooks/profiles/base.yml")
+    provision_profile(podman1.vm, "/vagrant/playbooks/profiles/base.yml")
     PROFILES.each do |profile|
-      provision_profile(podman1.vm, "profile-#{profile}", "/vagrant/playbooks/profiles/#{profile}.yml")
+      provision_profile(podman1.vm, "/vagrant/playbooks/profiles/#{profile}.yml")
     end
   end
 end
