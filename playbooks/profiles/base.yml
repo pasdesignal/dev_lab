@@ -47,7 +47,7 @@
 
   - name: Install base packages
     ansible.builtin.dnf:
-      name: [ 'bash-completion', 'make', 'vim', 'skopeo', 'podman', 'podman-plugins', 'systemd-container']
+      name: [ 'bash-completion', 'make', 'vim', 'skopeo', 'podman', 'podman-plugins', 'systemd-container', 'nmap-ncat', 'python3-pip']
       state: latest
 
   - name: Creating Welcome Message

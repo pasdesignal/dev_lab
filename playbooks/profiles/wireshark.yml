@@ -1,0 +1,16 @@
+---
+- name: "Wireshark profile: CLI packet capture/analysis tooling"
+  hosts: podman1
+  strategy: free
+  gather_facts: false
+  tasks:
+  - name: Install wireshark-cli tooling
+    ansible.builtin.dnf:
+      name: [ 'wireshark-cli' ]
+      state: latest
+
+  - name: Allow vagrant user to capture packets without sudo
+    ansible.builtin.user:
+      name: vagrant
+      groups: wireshark
+      append: true

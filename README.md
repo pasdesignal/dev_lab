@@ -53,14 +53,22 @@ Controlled by `VAGRANT_ARCH`, defaults to `arm64`.
 
 ## Choosing a profile
 
-Controlled by `VAGRANT_PROFILE`, defaults to `base`. Profiles are additive — every profile includes `base` plus whatever it adds.
+Controlled by `VAGRANT_PROFILE`, defaults to empty (base only). `base` always runs exactly once regardless of what you list — profiles are just the extra tooling layered on top, and no longer import `base.yml` themselves.
 
 | Profile | Use when | How to run |
 |---|---|---|
-| `base` (default) | You just need Podman and general dev tools | `vagrant up` |
+| (none, default) | You just need Podman and general dev tools | `vagrant up` |
 | `terraform` | You also need Terraform, kubectl, Helm, and the AWS CLI | `VAGRANT_PROFILE=terraform vagrant up` |
+| `wireshark` | You need CLI packet capture/analysis (tshark/dumpcap) | `VAGRANT_PROFILE=wireshark vagrant up` |
+| `claude-cli` | You need the Claude Code CLI for agentic coding-tool development/experiments | `VAGRANT_PROFILE=claude-cli vagrant up` |
+| `agent-lab` | You need Python + the Anthropic SDK for hand-rolled LLM agent experiments | `VAGRANT_PROFILE=agent-lab vagrant up` |
 
-Already have a VM running and want to switch profiles? `VAGRANT_PROFILE=terraform vagrant provision` re-runs Ansible without rebuilding the VM.
+Want more than one? List them comma-separated — `base` still only runs once either way:
+```sh
+VAGRANT_PROFILE=terraform,agent-lab vagrant up
+```
+
+Already have a VM running and want to add/switch profiles? `VAGRANT_PROFILE=terraform vagrant provision` re-runs Ansible without rebuilding the VM (same comma-separated list syntax works here too).
 
 ## Pinning a different box version
 
@@ -68,6 +76,19 @@ The Vagrantfile pins a specific `almalinux/9` box build by default. Override it 
 ```sh
 VAGRANT_BOX_VERSION=9.9.20270101 vagrant up
 ```
+
+## Running a tagged version
+
+Releases are tagged directly in this repo using basic semver (`vMAJOR.MINOR.PATCH` — minor for additive changes like a new profile, patch for fixes, major only for breaking changes to how you invoke `vagrant up`). `vagrant up` always uses whatever's currently checked out, so to run a specific tagged version rather than the latest commit on `main`:
+
+```sh
+git fetch --tags
+git tag -l                  # see what's available, e.g. v1.1.0
+git checkout v1.1.0         # detached HEAD at that release
+vagrant up
+```
+
+To get back to the latest development state afterwards: `git checkout main`.
 
 ## Everyday commands
 
@@ -121,12 +142,12 @@ ssh vagrant@192.168.88.4
 
 **podman1.lab** (`192.168.88.4`)
 
-| Always installed (`base`) | Added by `terraform` profile |
-|---|---|
-| podman, podman-plugins, skopeo | terraform |
-| bash-completion, make, vim | kubectl |
-| | helm |
-| | awscli |
+| Always installed (`base`) | Added by `terraform` | Added by `wireshark` | Added by `claude-cli` | Added by `agent-lab` |
+|---|---|---|---|---|
+| podman, podman-plugins, skopeo | terraform | wireshark-cli (tshark/dumpcap) | Claude Code CLI | anthropic (pip) |
+| bash-completion, make, vim | kubectl | | | python-dotenv (pip) |
+| python3-pip | helm | | | |
+| | awscli | | | |
 
 ## Acknowledgments
 

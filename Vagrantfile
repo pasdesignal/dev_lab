@@ -3,11 +3,18 @@
 #   amd64           - x86_64, emulated on Apple Silicon or native on Intel Macs
 ARCH = ENV.fetch('VAGRANT_ARCH', 'arm64')
 
-# Set VAGRANT_PROFILE to switch which tooling gets installed on top of the
-# base image. See playbooks/profiles/ for the available profiles.
-#   base (default) - podman, skopeo, and general dev tools only
-#   terraform      - base + Terraform, kubectl, Helm, AWS CLI
-PROFILE = ENV.fetch('VAGRANT_PROFILE', 'base')
+# Set VAGRANT_PROFILE to add tooling on top of the base image - base itself
+# always runs exactly once regardless of what's listed here, so profiles
+# never need to (and no longer do) import base.yml themselves.
+# See playbooks/profiles/ for the available profiles.
+#   (unset/empty) - podman, skopeo, and general dev tools only
+#   terraform      - + Terraform, kubectl, Helm, AWS CLI
+#   wireshark      - + wireshark-cli (tshark/dumpcap; CLI-only, no GUI)
+#   claude-cli     - + Claude Code CLI (via Anthropic's dnf repo)
+#   agent-lab      - + Python, the Anthropic SDK, python-dotenv
+# Combine profiles with a comma-separated list, e.g.:
+#   VAGRANT_PROFILE=terraform,agent-lab vagrant up
+PROFILES = ENV.fetch('VAGRANT_PROFILE', '').split(',').map(&:strip).reject { |p| p.empty? || p == 'base' }
 
 # Set VAGRANT_BOX_VERSION to pin to a different almalinux/9 box build than
 # the default below, e.g. to try a newer release before bumping it here.
@@ -37,13 +44,21 @@ Vagrant.configure("2") do |config|
     podman1.vm.hostname = "podman1.lab"
     podman1.vm.network :private_network, ip: "192.168.88.4"
     podman1.vm.provision :shell, inline: "sudo dnf install -y epel-release; sudo dnf config-manager --set-enabled crb; sudo dnf install -y ansible"
-    podman1.vm.provision :ansible_local do |ansible|
-      ansible.playbook = "/vagrant/playbooks/profiles/#{PROFILE}.yml"
-      ansible.install = false
-      ansible.compatibility_mode = "2.0"
-      ansible.inventory_path = "/vagrant/inventory"
-      ansible.config_file = "/vagrant/ansible.cfg"
-      ansible.limit = "all"
+
+    def provision_profile(vm, name, playbook)
+      vm.provision :ansible_local, name: name do |ansible|
+        ansible.playbook = playbook
+        ansible.install = false
+        ansible.compatibility_mode = "2.0"
+        ansible.inventory_path = "/vagrant/inventory"
+        ansible.config_file = "/vagrant/ansible.cfg"
+        ansible.limit = "all"
+      end
+    end
+
+    provision_profile(podman1.vm, "base", "/vagrant/playbooks/profiles/base.yml")
+    PROFILES.each do |profile|
+      provision_profile(podman1.vm, "profile-#{profile}", "/vagrant/playbooks/profiles/#{profile}.yml")
     end
   end
 end
