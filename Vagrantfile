@@ -11,6 +11,7 @@ ARCH = ENV.fetch('VAGRANT_ARCH', 'arm64')
 #   terraform      - + Terraform, kubectl, Helm, AWS CLI
 #   wireshark      - + wireshark-cli (tshark/dumpcap; CLI-only, no GUI)
 #   claude-cli     - + Claude Code CLI (via Anthropic's dnf repo)
+#   claude-sandbox - + bubblewrap, socat (Claude Code's Bash sandbox on Linux)
 #   agent-lab      - + Python, the Anthropic SDK, python-dotenv
 # Combine profiles with a comma-separated list, e.g.:
 #   VAGRANT_PROFILE=terraform,agent-lab vagrant up
