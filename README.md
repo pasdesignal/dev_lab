@@ -125,6 +125,9 @@ ssh vagrant@192.168.88.4
 > **Clock looks wrong inside the VM.** Check with `chronyc tracking` and `timedatectl`. This VM is provisioned to keep chrony as the sole time source (VMware Tools time sync is disabled to avoid the two fighting each other), so it should self-correct within a few seconds. If it doesn't, re-run `vagrant provision` to reapply the time-sync configuration.
 
 > [!TIP]
+> **`git push` fails with `Permission denied (publickey)` in a VS Code terminal.** The VM has no SSH key of its own: it uses your host's key through agent forwarding. VS Code creates a new agent socket each time the window reconnects, and a terminal opened before that keeps pointing at the old one. The base profile installs `/etc/profile.d/ssh-agent-refresh.sh`, which repairs this before each prompt. If it still fails, check `ssh-add -l` in the VM: "no identities" means the key isn't loaded in the agent on your host (`ssh-add` there).
+
+> [!TIP]
 > **A tool from a profile (e.g. `terraform`) isn't there.** You're probably on the `base` profile. Check what you provisioned with, then run `VAGRANT_PROFILE=terraform vagrant provision` to add it without rebuilding.
 
 > [!TIP]

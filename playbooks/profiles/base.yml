@@ -75,6 +75,30 @@
 
          "
 
+  # VS Code Remote-SSH creates a new forwarded-agent socket on every
+  # reconnect, but shells opened before the reconnect keep the old path, so
+  # git over SSH fails with "Permission denied (publickey)". This checks
+  # before each prompt and re-points a dead SSH_AUTH_SOCK at a live one.
+  - name: Repair a stale SSH agent socket in already-open shells
+    ansible.builtin.copy:
+      dest: /etc/profile.d/ssh-agent-refresh.sh
+      owner: root
+      group: root
+      mode: "0644"
+      content: |
+        # Managed by dev_lab (playbooks/profiles/base.yml).
+        # VS Code Remote-SSH makes a new agent socket on every reconnect; shells
+        # opened earlier keep the old, dead path. Re-point them at a live one.
+        [[ $- == *i* ]] || return 0
+        _refresh_ssh_auth_sock() {
+          [ -S "$SSH_AUTH_SOCK" ] && return
+          local s
+          for s in $(ls -t /run/user/"$(id -u)"/vscode-ssh-auth-sock-* 2>/dev/null); do
+            [ -S "$s" ] && { export SSH_AUTH_SOCK="$s"; return; }
+          done
+        }
+        PROMPT_COMMAND="_refresh_ssh_auth_sock${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
+
   handlers:
   - name: Restart vmtoolsd
     ansible.builtin.service:
