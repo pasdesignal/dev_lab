@@ -1,0 +1,15 @@
+---
+- name: "Claude sandbox profile: OS packages Claude Code's Bash sandbox needs on Linux"
+  hosts: podman1
+  strategy: free
+  gather_facts: false
+  tasks:
+  # bubblewrap (bwrap) builds the sandbox each Bash command runs in: its own
+  # mount namespace, with only the allowed paths visible/writable.
+  # socat bridges the sandbox's network (which has none of its own) to the
+  # proxy Claude Code runs outside it, where the domain allow-list is applied.
+  # Without both, sandboxed sessions can't start (or fall back to unsandboxed).
+  - name: Install Claude Code sandbox dependencies
+    ansible.builtin.dnf:
+      name: [ 'bubblewrap', 'socat' ]
+      state: latest

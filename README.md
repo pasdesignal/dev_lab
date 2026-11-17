@@ -61,6 +61,7 @@ Controlled by `VAGRANT_PROFILE`, defaults to empty (base only). `base` always ru
 | `terraform` | You also need Terraform, kubectl, Helm, and the AWS CLI | `VAGRANT_PROFILE=terraform vagrant up` |
 | `wireshark` | You need CLI packet capture/analysis (tshark/dumpcap) | `VAGRANT_PROFILE=wireshark vagrant up` |
 | `claude-cli` | You need the Claude Code CLI for agentic coding-tool development/experiments | `VAGRANT_PROFILE=claude-cli vagrant up` |
+| `claude-sandbox` | You run Claude Code with its Bash sandbox enabled (works with the CLI or the VS Code extension) | `VAGRANT_PROFILE=claude-sandbox vagrant up` |
 | `agent-lab` | You need Python + the Anthropic SDK for hand-rolled LLM agent experiments | `VAGRANT_PROFILE=agent-lab vagrant up` |
 
 Want more than one? List them comma-separated — `base` still only runs once either way:
@@ -142,12 +143,12 @@ ssh vagrant@192.168.88.4
 
 **podman1.lab** (`192.168.88.4`)
 
-| Always installed (`base`) | Added by `terraform` | Added by `wireshark` | Added by `claude-cli` | Added by `agent-lab` |
-|---|---|---|---|---|
-| podman, podman-plugins, skopeo | terraform | wireshark-cli (tshark/dumpcap) | Claude Code CLI | anthropic (pip) |
-| bash-completion, make, vim | kubectl | | | python-dotenv (pip) |
-| python3-pip | helm | | | |
-| | awscli | | | |
+| Always installed (`base`) | Added by `terraform` | Added by `wireshark` | Added by `claude-cli` | Added by `claude-sandbox` | Added by `agent-lab` |
+|---|---|---|---|---|---|
+| podman, podman-plugins, skopeo | terraform | wireshark-cli (tshark/dumpcap) | Claude Code CLI | bubblewrap | anthropic (pip) |
+| bash-completion, make, vim | kubectl | | | socat | python-dotenv (pip) |
+| python3-pip | helm | | | | |
+| | awscli | | | | |
 
 ## Acknowledgments
 
