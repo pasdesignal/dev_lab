@@ -116,6 +116,10 @@ You can also reach the VM directly by IP, though this is less reliable than goin
 ssh vagrant@192.168.88.4
 ```
 
+### Claude Code history survives rebuilds
+
+Claude Code's session transcripts and per-project memory (what `/resume` and the VS Code extension's past-conversations list read) are kept on your host in `~/data/claude/`. That folder is mounted in the VM at `/data`, and Vagrant creates it if it's missing (set `VAGRANT_DATA_DIR` to use a different host path). The base profile symlinks `~/.claude/projects`, `~/.claude/plans` and `~/.claude/file-history` in the VM to `/data/claude`, so a `vagrant destroy && vagrant up` brings your history back. This works for both the CLI and the VS Code extension with no extra setup. It also sets `cleanupPeriodDays` in `/etc/claude-code/managed-settings.json` so old transcripts aren't deleted after the default 30 days. Your login (`~/.claude/.credentials.json`) and the rest of `~/.claude` stay inside the VM, so you'll still sign in again after a rebuild. Skipped if `/data` isn't mounted.
+
 ## Troubleshooting
 
 > [!TIP]

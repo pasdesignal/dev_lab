@@ -31,6 +31,11 @@ Vagrant.configure("2") do |config|
   else
     puts "NOTE: #{host_git_dir} not found — skipping the /home/vagrant/git shared folder. Create it and run `vagrant reload` to enable it."
   end
+  # Persistent VM state that should survive `vagrant destroy` (e.g. Claude Code
+  # chat history) lives on the host here, mounted at /data. Unlike ~/git this
+  # is created automatically. Override the host path with VAGRANT_DATA_DIR.
+  host_data_dir = ENV.fetch('VAGRANT_DATA_DIR', "#{Dir.home}/data")
+  config.vm.synced_folder host_data_dir, "/data", create: true
   config.ssh.forward_agent = true
   config.vm.provider "vmware_desktop" do |v|
     v.memory = 8096

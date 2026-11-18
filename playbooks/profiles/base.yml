@@ -99,6 +99,69 @@
         }
         PROMPT_COMMAND="_refresh_ssh_auth_sock${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
 
+  # Claude Code keeps session transcripts (what /resume and the VS Code
+  # extension's history list read) and per-project memory under
+  # ~/.claude/projects, which lives on the VM disk and is lost on rebuild.
+  # Symlink those dirs into the host-backed /data mount instead. Credentials
+  # and the rest of ~/.claude stay local to the VM on purpose. Works for both
+  # the CLI and the VS Code extension (its bundled binary reads ~/.claude).
+  - name: Check whether the host /data folder is mounted
+    ansible.builtin.command: mountpoint -q /data
+    register: data_mount
+    changed_when: false
+    failed_when: false
+
+  - name: Persist Claude Code history on the host /data mount
+    when: data_mount.rc == 0
+    become: true
+    become_user: vagrant
+    ansible.builtin.shell: |
+      set -eu
+      persist=/data/claude
+      changed=0
+      mkdir -p "$HOME/.claude" && chmod 700 "$HOME/.claude"
+      for d in {{ claude_persist_dirs | join(' ') }}; do
+        src="$HOME/.claude/$d"
+        mkdir -p "$persist/$d"
+        [ "$(readlink "$src" 2>/dev/null)" = "$persist/$d" ] && continue
+        if [ -d "$src" ] && [ ! -L "$src" ]; then
+          # Existing VM: merge local history into the share (never overwrite).
+          cp -an "$src/." "$persist/$d/" && rm -rf "$src"
+        fi
+        rm -f "$src"
+        ln -s "$persist/$d" "$src"
+        changed=1
+      done
+      echo "changed=$changed"
+    args:
+      executable: /bin/bash
+    vars:
+      claude_persist_dirs: [ 'projects', 'plans', 'file-history' ]
+    register: claude_persist
+    changed_when: "'changed=1' in claude_persist.stdout"
+
+  # Claude Code deletes transcripts older than 30 days by default, which would
+  # defeat the point. Set via managed settings so ~/.claude/settings.json is
+  # left alone for the user.
+  - name: Create the Claude Code managed settings directory
+    ansible.builtin.file:
+      path: /etc/claude-code
+      state: directory
+      owner: root
+      group: root
+      mode: "0755"
+
+  - name: Keep Claude Code transcripts for 10 years instead of 30 days
+    ansible.builtin.copy:
+      dest: /etc/claude-code/managed-settings.json
+      owner: root
+      group: root
+      mode: "0644"
+      content: |
+        {
+          "cleanupPeriodDays": 3650
+        }
+
   handlers:
   - name: Restart vmtoolsd
     ansible.builtin.service:
