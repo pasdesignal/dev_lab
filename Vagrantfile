@@ -31,9 +31,14 @@ Vagrant.configure("2") do |config|
   else
     puts "NOTE: #{host_git_dir} not found — skipping the /home/vagrant/git shared folder. Create it and run `vagrant reload` to enable it."
   end
+  # Persistent VM state that should survive `vagrant destroy` (e.g. Claude Code
+  # chat history) lives on the host here, mounted at /data. Unlike ~/git this
+  # is created automatically. Override the host path with VAGRANT_DATA_DIR.
+  host_data_dir = ENV.fetch('VAGRANT_DATA_DIR', "#{Dir.home}/data")
+  config.vm.synced_folder host_data_dir, "/data", create: true
   config.ssh.forward_agent = true
   config.vm.provider "vmware_desktop" do |v|
-    v.memory = 8096
+    v.memory = 8192
     v.cpus = 4
     v.vmx["cpuid.coresPerSocket"] = "2" if ARCH == 'amd64'
   end
@@ -44,13 +49,6 @@ Vagrant.configure("2") do |config|
     podman1.vm.box_version = BOX_VERSION
     podman1.vm.hostname = "podman1.lab"
     podman1.vm.network :private_network, ip: "192.168.88.4"
-    # Pin the SSH forward to 2222 instead of relying on Vagrant's implicit
-    # default, which has auto_correct on and silently moves to another port
-    # (2200-2250) if it thinks 2222 is taken - breaking any ~/.ssh/config
-    # entry copied from `vagrant ssh-config`. id: "ssh" replaces the default
-    # forward rather than adding a second one; with auto_correct off, a
-    # collision fails `vagrant up` loudly instead.
-    podman1.vm.network :forwarded_port, guest: 22, host: 2222, id: "ssh", auto_correct: false
     podman1.vm.provision :shell, inline: "sudo dnf install -y epel-release; sudo dnf config-manager --set-enabled crb; sudo dnf install -y ansible"
 
     def provision_profile(vm, playbook)
