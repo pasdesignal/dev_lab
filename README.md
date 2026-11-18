@@ -134,6 +134,9 @@ ssh vagrant@192.168.88.4
 > **`/home/vagrant/git` isn't there inside the VM.** The shared folder only gets mounted if `~/git` existed on your host at `vagrant up` time. Create it (`mkdir -p ~/git`) and run `vagrant reload` to pick it up — no need to destroy anything.
 
 > [!TIP]
+> **`vagrant up` fails with a port collision on 2222.** The SSH forward is pinned to host port 2222 (so a `~/.ssh/config` entry copied from `vagrant ssh-config` stays valid across rebuilds), and something else already has it. Check with `lsof -nP -iTCP:2222 -sTCP:LISTEN`. If nothing shows up, the VMware utility may still hold a stale forward from a destroyed VM — restart it with `sudo launchctl kickstart -k system/com.vagrant.vagrant-vmware-utility` and run `vagrant up` again.
+
+> [!TIP]
 > **Can't reach `192.168.88.4` directly, but `vagrant ssh` works.** This is host networking, not the VM — check macOS firewall settings and VMware's network service. `vagrant ssh` (NAT-based) doesn't depend on the private network being reachable, so prefer it when in doubt.
 
 > [!TIP]
