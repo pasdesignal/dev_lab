@@ -38,7 +38,7 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder host_data_dir, "/data", create: true
   config.ssh.forward_agent = true
   config.vm.provider "vmware_desktop" do |v|
-    v.memory = 8096
+    v.memory = 8192
     v.cpus = 4
     v.vmx["cpuid.coresPerSocket"] = "2" if ARCH == 'amd64'
   end
